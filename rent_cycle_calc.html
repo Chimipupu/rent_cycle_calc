@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>自転車レンタル料金シミュレーション</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 2rem auto;
+            padding: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-top: 1rem;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 0.5rem;
+            margin-top: 0.25rem;
+        }
+
+        button {
+            margin-top: 1.5rem;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .result {
+            margin-top: 2rem;
+            padding: 1rem;
+            border: 1px solid #ccc;
+            background: #f9f9f9;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>自転車レンタル料金シミュレーター</h1>
+    <form id="calcForm">
+        <label>
+            走行距離 (km):
+            <input type="number" id="distance" step="0.1" required />
+        </label>
+        <label>
+            平均速度 (km/h):
+            <input type="number" id="speed" step="0.1" required />
+        </label>
+        <label>
+            最初の30分の料金 (円):
+            <input type="number" id="firstCost" value="160" required />
+        </label>
+        <label>
+            延長１区間の時間 (分):
+            <input type="number" id="intervalMin" value="15" required />
+        </label>
+        <label>
+            延長１区間の料金 (円):
+            <input type="number" id="intervalCost" value="160" required />
+        </label>
+        <label>
+            <input type="checkbox" id="useReturn" />
+            30分ごとに返却プランを使う
+        </label>
+        <button type="button" onclick="calculate()">計算する</button>
+    </form>
+
+    <div id="output" class="result" style="display: none"></div>
+
+    <script>
+        function calculate() {
+            // 入力値取得
+            const distance = parseFloat(document.getElementById("distance").value);
+            const speed = parseFloat(document.getElementById("speed").value);
+            const firstCost = parseFloat(
+                document.getElementById("firstCost").value
+            );
+            const intervalMin = parseFloat(
+                document.getElementById("intervalMin").value
+            );
+            const intervalCost = parseFloat(
+                document.getElementById("intervalCost").value
+            );
+            const useReturn = document.getElementById("useReturn").checked;
+
+            // 時間計算
+            const timeMin = (distance / speed) * 60;
+
+            // コスト計算 関数
+            function costReturn(time) {
+                return Math.ceil(time / 30) * firstCost;
+            }
+            function costExtend(time) {
+                if (time <= 30) return firstCost;
+                const extra = time - 30;
+                const intervals = Math.ceil(extra / intervalMin);
+                return firstCost + intervals * intervalCost;
+            }
+
+            const returnCost = costReturn(timeMin);
+            const extendCost = costExtend(timeMin);
+
+            // 結果表示
+            let html = `<p>走行に必要な時間: <strong>${timeMin.toFixed(
+                1
+            )} 分</strong></p>`;
+            if (useReturn) {
+                html += `<p>選択プラン: 30分ごとに返却 → <strong>${returnCost} 円</strong></p>`;
+            } else {
+                html += `<p>選択プラン: 延長しながら乗り続ける → <strong>${extendCost} 円</strong></p>`;
+            }
+            html += `<hr>`;
+            html += `<p>30分ごとに返却: <strong>${returnCost} 円</strong></p>`;
+            html += `<p>延長プラン: <strong>${extendCost} 円</strong></p>`;
+
+            if (returnCost < extendCost) {
+                html += `<p>→ 最安プランは「30分ごとに返却プラン」です。</p>`;
+            } else if (extendCost < returnCost) {
+                html += `<p>→ 最安プランは「延長プラン」です。</p>`;
+            } else {
+                html += `<p>→ 両プランとも同額です。</p>`;
+            }
+
+            const output = document.getElementById("output");
+            output.innerHTML = html;
+            output.style.display = "block";
+        }
+    </script>
+</body>
+
+</html>
