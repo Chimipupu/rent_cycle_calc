@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>レンタル自転車料金シミュレータ</title>
+    <title>自転車レンタル料金シミュレータ</title>
     <style>
         body {
             font-family: 'Helvetica Neue', Arial, sans-serif;
@@ -101,7 +101,7 @@
 
 <body>
     <div class="container">
-        <h1>レンタル自転車料金シミュレータ</h1>
+        <h1>自転車レンタル料金シミュレータ</h1>
         <form id="calcForm">
             <label>
                 走行距離 (km)
@@ -159,7 +159,7 @@
             } else if (costExtend < costReturn) {
                 html += `<div class="best">最安プラン: 延長プラン</div>`;
             } else {
-                html += `<div class="best">両プランとも同額です</div>`;
+                html += `<div class="best">両プランとも同額</div>`;
             }
 
             const output = document.getElementById('output');
@@ -174,10 +174,10 @@
             chartInstance = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: ['30分返却', '延長プラン'],
+                    labels: ['延長プラン', '30分ごとに返却'],
                     datasets: [{
                         label: '料金 (円)',
-                        data: [costReturn, costExtend],
+                        data: [costExtend, costReturn],
                         backgroundColor: ['rgba(0, 123, 255, 0.6)', 'rgba(40, 167, 69, 0.6)'],
                         borderColor: ['rgba(0, 123, 255, 1)', 'rgba(40, 167, 69, 1)'],
                         borderWidth: 1
@@ -193,5 +193,4 @@
         }
     </script>
 </body>
-
 </html>
