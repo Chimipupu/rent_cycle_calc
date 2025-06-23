@@ -2,11 +2,9 @@
 
 走行距離と速度を入力して、自転車のレンタル料金をシミュレーション📊
 
-<div align="center">
-  <img width="350" src="/page_example.png">
-</div>
-
 ## ℹ️使い方
+
+### [リンク🔗](/rent_cycle_calc.html)をクリック
 
 1. **数字を入力**
 
@@ -19,3 +17,7 @@
 2. **「料金を計算」をクリック**
 
    * 必要な時間と、2つのプランの金額を自動で計算
+
+<div align="center">
+  <img width="350" src="/page_example.png">
+</div>
