@@ -4,7 +4,7 @@
 
 ## ℹ️使い方
 
-### [リンク🔗](/rent_cycle_calc.html)をクリック
+### [リンク🔗](https://chimipupu.github.io/rent_cycle_calc/)をクリックしてシュミレータを開く
 
 1. **数字を入力**
 
