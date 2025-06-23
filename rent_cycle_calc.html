@@ -2,133 +2,194 @@
 <html lang="ja">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>自転車レンタル料金シミュレーション</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>レンタル自転車料金シミュレータ</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 2rem;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             max-width: 600px;
-            margin: 2rem auto;
-            padding: 1rem;
+            width: 100%;
+            padding: 2rem;
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 1.75rem;
+            text-align: center;
+            color: #333;
         }
 
         label {
             display: block;
             margin-top: 1rem;
+            font-size: 0.9rem;
+            color: #555;
         }
 
         input[type="number"] {
             width: 100%;
-            padding: 0.5rem;
-            margin-top: 0.25rem;
+            padding: 0.75rem;
+            margin-top: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 1rem;
+            box-sizing: border-box;
         }
 
         button {
+            width: 100%;
             margin-top: 1.5rem;
-            padding: 0.75rem 1.5rem;
+            padding: 0.75rem;
             font-size: 1rem;
+            background-color: #007bff;
+            border: none;
+            color: white;
+            border-radius: 8px;
             cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
         }
 
         .result {
             margin-top: 2rem;
-            padding: 1rem;
-            border: 1px solid #ccc;
-            background: #f9f9f9;
+            background: #fafafa;
+            border-left: 4px solid #007bff;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            color: #333;
+        }
+
+        .result p {
+            margin: 0.5rem 0;
+        }
+
+        .best {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            background-color: #e6ffed;
+            border: 1px solid #b7eb8f;
+            border-radius: 8px;
+            color: #389e0d;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        canvas {
+            margin-top: 1.5rem;
+            max-width: 100%;
         }
     </style>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
-    <h1>自転車レンタル料金シミュレーター</h1>
-    <form id="calcForm">
-        <label>
-            走行距離 (km):
-            <input type="number" id="distance" step="0.1" required />
-        </label>
-        <label>
-            平均速度 (km/h):
-            <input type="number" id="speed" step="0.1" required />
-        </label>
-        <label>
-            最初の30分の料金 (円):
-            <input type="number" id="firstCost" value="160" required />
-        </label>
-        <label>
-            延長１区間の時間 (分):
-            <input type="number" id="intervalMin" value="15" required />
-        </label>
-        <label>
-            延長１区間の料金 (円):
-            <input type="number" id="intervalCost" value="160" required />
-        </label>
-        <label>
-            <input type="checkbox" id="useReturn" />
-            30分ごとに返却プランを使う
-        </label>
-        <button type="button" onclick="calculate()">計算する</button>
-    </form>
+    <div class="container">
+        <h1>レンタル自転車料金シミュレータ</h1>
+        <form id="calcForm">
+            <label>
+                走行距離 (km)
+                <input type="number" id="distance" step="0.1" placeholder="例: 10" required>
+            </label>
+            <label>
+                平均速度 (km/h)
+                <input type="number" id="speed" step="0.1" placeholder="例: 15" required>
+            </label>
+            <label>
+                最初の30分の料金 (円)
+                <input type="number" id="firstCost" value="160" required>
+            </label>
+            <label>
+                延長１区間の時間 (分)
+                <input type="number" id="intervalMin" value="15" required>
+            </label>
+            <label>
+                延長１区間の料金 (円)
+                <input type="number" id="intervalCost" value="160" required>
+            </label>
+            <button type="button" onclick="calculate()">料金を計算</button>
+        </form>
 
-    <div id="output" class="result" style="display: none"></div>
+        <div id="output" class="result" style="display:none;"></div>
+        <canvas id="costChart" style="display:none;"></canvas>
+    </div>
 
     <script>
+        let chartInstance = null;
         function calculate() {
             // 入力値取得
-            const distance = parseFloat(document.getElementById("distance").value);
-            const speed = parseFloat(document.getElementById("speed").value);
-            const firstCost = parseFloat(
-                document.getElementById("firstCost").value
-            );
-            const intervalMin = parseFloat(
-                document.getElementById("intervalMin").value
-            );
-            const intervalCost = parseFloat(
-                document.getElementById("intervalCost").value
-            );
-            const useReturn = document.getElementById("useReturn").checked;
+            const distance = parseFloat(document.getElementById('distance').value);
+            const speed = parseFloat(document.getElementById('speed').value);
+            const firstCost = parseFloat(document.getElementById('firstCost').value);
+            const intervalMin = parseFloat(document.getElementById('intervalMin').value);
+            const intervalCost = parseFloat(document.getElementById('intervalCost').value);
 
-            // 時間計算
+            // 必要時間計算
             const timeMin = (distance / speed) * 60;
 
-            // コスト計算 関数
-            function costReturn(time) {
-                return Math.ceil(time / 30) * firstCost;
-            }
-            function costExtend(time) {
-                if (time <= 30) return firstCost;
-                const extra = time - 30;
-                const intervals = Math.ceil(extra / intervalMin);
-                return firstCost + intervals * intervalCost;
-            }
-
-            const returnCost = costReturn(timeMin);
-            const extendCost = costExtend(timeMin);
+            // プラン別コスト計算
+            const costReturn = Math.ceil(timeMin / 30) * firstCost;
+            const extra = timeMin <= 30 ? 0 : timeMin - 30;
+            const intervals = Math.ceil(extra / intervalMin);
+            const costExtend = firstCost + intervals * intervalCost;
 
             // 結果表示
-            let html = `<p>走行に必要な時間: <strong>${timeMin.toFixed(
-                1
-            )} 分</strong></p>`;
-            if (useReturn) {
-                html += `<p>選択プラン: 30分ごとに返却 → <strong>${returnCost} 円</strong></p>`;
-            } else {
-                html += `<p>選択プラン: 延長しながら乗り続ける → <strong>${extendCost} 円</strong></p>`;
-            }
-            html += `<hr>`;
-            html += `<p>30分ごとに返却: <strong>${returnCost} 円</strong></p>`;
-            html += `<p>延長プラン: <strong>${extendCost} 円</strong></p>`;
+            let html = `<p>走行に必要な時間: <strong>${timeMin.toFixed(1)} 分</strong></p>`;
+            html += `<p>30分ごとに返却: <strong>${costReturn} 円</strong></p>`;
+            html += `<p>延長プラン: <strong>${costExtend} 円</strong></p>`;
 
-            if (returnCost < extendCost) {
-                html += `<p>→ 最安プランは「30分ごとに返却プラン」です。</p>`;
-            } else if (extendCost < returnCost) {
-                html += `<p>→ 最安プランは「延長プラン」です。</p>`;
+            if (costReturn < costExtend) {
+                html += `<div class="best">最安プラン: 30分ごとに返却</div>`;
+            } else if (costExtend < costReturn) {
+                html += `<div class="best">最安プラン: 延長プラン</div>`;
             } else {
-                html += `<p>→ 両プランとも同額です。</p>`;
+                html += `<div class="best">両プランとも同額です</div>`;
             }
 
-            const output = document.getElementById("output");
+            const output = document.getElementById('output');
             output.innerHTML = html;
-            output.style.display = "block";
+            output.style.display = 'block';
+
+            // グラフ表示
+            const ctx = document.getElementById('costChart').getContext('2d');
+            document.getElementById('costChart').style.display = 'block';
+            // 既存のチャート破棄
+            if (chartInstance) chartInstance.destroy();
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['30分返却', '延長プラン'],
+                    datasets: [{
+                        label: '料金 (円)',
+                        data: [costReturn, costExtend],
+                        backgroundColor: ['rgba(0, 123, 255, 0.6)', 'rgba(40, 167, 69, 0.6)'],
+                        borderColor: ['rgba(0, 123, 255, 1)', 'rgba(40, 167, 69, 1)'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
         }
     </script>
 </body>
